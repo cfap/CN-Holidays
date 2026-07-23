@@ -45,6 +45,11 @@ class CalendarTests(unittest.TestCase):
         self.assertEqual(self.summaries.count("国庆节（补班）"), 2)
         self.assertIn("元旦（补班）", self.summaries)
         self.assertIn("劳动节（补班）", self.summaries)
+        self.assertNotIn("调休上班", self.unfolded)
+        self.assertEqual(
+            self.unfolded.count("CATEGORIES:中国大陆节假日,补班"),
+            6,
+        )
 
     def test_workday_dates_are_present(self) -> None:
         for value in (

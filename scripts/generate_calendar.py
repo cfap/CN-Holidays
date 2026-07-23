@@ -117,9 +117,9 @@ def validate_year(record: dict[str, Any], source: Path) -> dict[str, Any]:
                 f"{item_context}.workdays[{workday_index}]",
             )
             if workday.year != year:
-                raise CalendarDataError(f"{item_context} 的调休日必须位于 {year} 年")
+                raise CalendarDataError(f"{item_context} 的补班日期必须位于 {year} 年")
             if workday in workday_dates:
-                raise CalendarDataError(f"{context} 中存在重复调休日：{workday.isoformat()}")
+                raise CalendarDataError(f"{context} 中存在重复补班日期：{workday.isoformat()}")
             workday_dates.add(workday)
             workdays.append(workday)
 
@@ -263,7 +263,7 @@ def generate_calendar(years: list[dict[str, Any]]) -> bytes:
         "X-PUBLISHED-TTL:PT24H",
         "X-WR-CALDESC:"
         + escape_text(
-            f"依据国务院办公厅年度通知整理，包含放假区间与调休上班日。当前数据覆盖 {year_label} 年。"
+            f"依据国务院办公厅年度通知整理，包含放假区间与补班日期。当前数据覆盖 {year_label} 年。"
         ),
     ]
 
@@ -321,7 +321,7 @@ def generate_calendar(years: list[dict[str, Any]]) -> bytes:
             for workday in holiday["workdays"]:
                 readable_date = f"{workday.year}年{workday.month}月{workday.day}日"
                 workday_description = (
-                    f"按照{document}，{readable_date}为{holiday['name']}调休上班日。\n"
+                    f"按照{document}，{readable_date}为{holiday['name']}补班日期。\n"
                     f"来源：{year['source_url']}"
                 )
                 events.append(
@@ -337,7 +337,7 @@ def generate_calendar(years: list[dict[str, Any]]) -> bytes:
                             end=workday,
                             summary=f"{holiday['name']}（补班）",
                             description=workday_description,
-                            categories=("中国大陆节假日", "调休上班"),
+                            categories=("中国大陆节假日", "补班"),
                             source_url=year["source_url"],
                             timestamp=year["last_modified"],
                             sequence=year["revision"],

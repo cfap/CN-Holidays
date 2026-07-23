@@ -9,7 +9,7 @@ X-APPLE-CALENDAR-COLOR:#D70015
 REFRESH-INTERVAL;VALUE=DURATION:P1D
 X-PUBLISHED-TTL:PT24H
 X-WR-CALDESC:依据国务院办公厅年度通知整理，包含放假区
- 间与调休上班日。当前数据覆盖 2026 年。
+ 间与补班日期。当前数据覆盖 2026 年。
 BEGIN:VEVENT
 UID:holiday-20260101-new-year@cncalendar
 DTSTAMP:20251104T090000Z
@@ -86,10 +86,10 @@ DTSTART;VALUE=DATE:20260104
 DTEND;VALUE=DATE:20260105
 SUMMARY:元旦（补班）
 DESCRIPTION:按照国务院办公厅关于2026年部分节假日安排的
- 通知（国办发明电〔2025〕7号），2026年1月4日为元旦调休
- 上班日。\n来源：https://www.gov.cn/zhengce/zhengceku/202511/content
- _7047091.htm
-CATEGORIES:中国大陆节假日,调休上班
+ 通知（国办发明电〔2025〕7号），2026年1月4日为元旦补班
+ 日期。\n来源：https://www.gov.cn/zhengce/zhengceku/202511/content_70
+ 47091.htm
+CATEGORIES:中国大陆节假日,补班
 CLASS:PUBLIC
 STATUS:CONFIRMED
 TRANSP:TRANSPARENT
@@ -107,10 +107,10 @@ DTSTART;VALUE=DATE:20260214
 DTEND;VALUE=DATE:20260215
 SUMMARY:春节（补班）
 DESCRIPTION:按照国务院办公厅关于2026年部分节假日安排的
- 通知（国办发明电〔2025〕7号），2026年2月14日为春节调
- 休上班日。\n来源：https://www.gov.cn/zhengce/zhengceku/202511/cont
- ent_7047091.htm
-CATEGORIES:中国大陆节假日,调休上班
+ 通知（国办发明电〔2025〕7号），2026年2月14日为春节补
+ 班日期。\n来源：https://www.gov.cn/zhengce/zhengceku/202511/content
+ _7047091.htm
+CATEGORIES:中国大陆节假日,补班
 CLASS:PUBLIC
 STATUS:CONFIRMED
 TRANSP:TRANSPARENT
@@ -327,10 +327,10 @@ DTSTART;VALUE=DATE:20260228
 DTEND;VALUE=DATE:20260301
 SUMMARY:春节（补班）
 DESCRIPTION:按照国务院办公厅关于2026年部分节假日安排的
- 通知（国办发明电〔2025〕7号），2026年2月28日为春节调
- 休上班日。\n来源：https://www.gov.cn/zhengce/zhengceku/202511/cont
- ent_7047091.htm
-CATEGORIES:中国大陆节假日,调休上班
+ 通知（国办发明电〔2025〕7号），2026年2月28日为春节补
+ 班日期。\n来源：https://www.gov.cn/zhengce/zhengceku/202511/content
+ _7047091.htm
+CATEGORIES:中国大陆节假日,补班
 CLASS:PUBLIC
 STATUS:CONFIRMED
 TRANSP:TRANSPARENT
@@ -522,10 +522,10 @@ DTSTART;VALUE=DATE:20260509
 DTEND;VALUE=DATE:20260510
 SUMMARY:劳动节（补班）
 DESCRIPTION:按照国务院办公厅关于2026年部分节假日安排的
- 通知（国办发明电〔2025〕7号），2026年5月9日为劳动节调
- 休上班日。\n来源：https://www.gov.cn/zhengce/zhengceku/202511/cont
- ent_7047091.htm
-CATEGORIES:中国大陆节假日,调休上班
+ 通知（国办发明电〔2025〕7号），2026年5月9日为劳动节补
+ 班日期。\n来源：https://www.gov.cn/zhengce/zhengceku/202511/content
+ _7047091.htm
+CATEGORIES:中国大陆节假日,补班
 CLASS:PUBLIC
 STATUS:CONFIRMED
 TRANSP:TRANSPARENT
@@ -608,9 +608,9 @@ DTEND;VALUE=DATE:20260921
 SUMMARY:国庆节（补班）
 DESCRIPTION:按照国务院办公厅关于2026年部分节假日安排的
  通知（国办发明电〔2025〕7号），2026年9月20日为国庆节
- 调休上班日。\n来源：https://www.gov.cn/zhengce/zhengceku/202511/c
- ontent_7047091.htm
-CATEGORIES:中国大陆节假日,调休上班
+ 补班日期。\n来源：https://www.gov.cn/zhengce/zhengceku/202511/cont
+ ent_7047091.htm
+CATEGORIES:中国大陆节假日,补班
 CLASS:PUBLIC
 STATUS:CONFIRMED
 TRANSP:TRANSPARENT
@@ -847,9 +847,9 @@ DTEND;VALUE=DATE:20261011
 SUMMARY:国庆节（补班）
 DESCRIPTION:按照国务院办公厅关于2026年部分节假日安排的
  通知（国办发明电〔2025〕7号），2026年10月10日为国庆节
- 调休上班日。\n来源：https://www.gov.cn/zhengce/zhengceku/202511/c
- ontent_7047091.htm
-CATEGORIES:中国大陆节假日,调休上班
+ 补班日期。\n来源：https://www.gov.cn/zhengce/zhengceku/202511/cont
+ ent_7047091.htm
+CATEGORIES:中国大陆节假日,补班
 CLASS:PUBLIC
 STATUS:CONFIRMED
 TRANSP:TRANSPARENT
