@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#c9202f">
+  <title>中国大陆法定节假日与调休</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", sans-serif;
+      color: #251b1c;
+      background: #f8f4ef;
+    }
+    * { box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      margin: 0;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background:
+        radial-gradient(circle at 85% 10%, rgba(201, 32, 47, .12), transparent 34%),
+        #f8f4ef;
+    }
+    main {
+      width: min(100%, 620px);
+      padding: clamp(28px, 7vw, 56px);
+      border: 1px solid rgba(90, 48, 50, .12);
+      border-radius: 28px;
+      background: rgba(255, 255, 255, .86);
+      box-shadow: 0 24px 70px rgba(79, 35, 39, .10);
+    }
+    .mark {
+      display: grid;
+      width: 56px;
+      height: 56px;
+      place-items: center;
+      margin-bottom: 24px;
+      border-radius: 16px;
+      color: white;
+      background: #c9202f;
+      font-size: 26px;
+      font-weight: 700;
+      box-shadow: 0 10px 24px rgba(201, 32, 47, .25);
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(30px, 7vw, 44px);
+      line-height: 1.12;
+      letter-spacing: -.04em;
+    }
+    .lead {
+      margin: 18px 0 0;
+      color: #6b5b5d;
+      font-size: 17px;
+      line-height: 1.7;
+    }
+    .facts {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 24px 0 0;
+    }
+    .facts span {
+      padding: 7px 11px;
+      border-radius: 999px;
+      background: #f4e9e8;
+      color: #7b2e35;
+      font-size: 14px;
+    }
+    .actions {
+      display: grid;
+      gap: 12px;
+      margin-top: 32px;
+    }
+    a, button {
+      min-height: 50px;
+      display: grid;
+      place-items: center;
+      border: 0;
+      border-radius: 14px;
+      font: inherit;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .primary { color: white; background: #c9202f; }
+    .secondary { color: #6d292f; background: #f4e9e8; }
+    .hint {
+      margin: 24px 0 0;
+      color: #7b6d6e;
+      font-size: 13px;
+      line-height: 1.65;
+    }
+    .hint a { display: inline; color: #8f2630; text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="mark" aria-hidden="true">休</div>
+    <h1>中国大陆法定节假日与调休</h1>
+    <p class="lead">适用于 iPhone、iPad 和 Mac 的只读订阅日历。标注官方放假区间与调休上班日，订阅后可随源文件更新。</p>
+    <div class="facts" aria-label="数据摘要">
+      <span>按官方年度通知更新</span>
+      <span>法定节假日</span>
+      <span>含调休上班日</span>
+    </div>
+    <div class="actions">
+      <a class="primary" id="subscribe" href="cn-holidays.ics">订阅到系统日历</a>
+      <button class="secondary" id="copy" type="button">复制 HTTPS 订阅地址</button>
+      <a class="secondary" href="cn-holidays.ics" download>下载 .ics 文件</a>
+    </div>
+    <p class="hint">数据依据<a href="https://www.gov.cn/zhengce/zhengceku/202511/content_7047091.htm">国务院办公厅 2026 年节假日安排通知</a>整理。日历为只读订阅，不含提醒，也不会占用“忙碌”时间。</p>
+  </main>
+  <script>
+    const calendarUrl = new URL("cn-holidays.ics", window.location.href);
+    const subscribe = document.querySelector("#subscribe");
+    const copy = document.querySelector("#copy");
+
+    if (calendarUrl.protocol === "http:" || calendarUrl.protocol === "https:") {
+      subscribe.href = calendarUrl.href.replace(/^https?:/, "webcal:");
+    }
+
+    copy.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(calendarUrl.href);
+        copy.textContent = "已复制订阅地址";
+      } catch (_) {
+        window.prompt("复制这个订阅地址：", calendarUrl.href);
+      }
+    });
+  </script>
+</body>
+</html>
