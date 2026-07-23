@@ -18,7 +18,7 @@ DEFAULT_OUTPUT = ROOT / "docs" / "cn-holidays.ics"
 ID_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 PREVIOUS_DAY_REMINDER_TRIGGER = "-PT10H"
 SAME_DAY_REMINDER_TRIGGER = "PT9H"
-CALENDAR_COLOR = "#007AFF"
+CALENDAR_COLOR = "#FF3B30"
 HOLIDAY_PREFIX = "🏖️ "
 WORKDAY_PREFIX = "💔 "
 OBSERVANCE_PREFIXES = {
@@ -75,7 +75,13 @@ def validate_year(record: dict[str, Any], source: Path) -> dict[str, Any]:
     if not isinstance(revision, int) or revision < 0:
         raise CalendarDataError(f"{context}.revision 必须是非负整数")
 
-    last_modified = parse_timestamp(record.get("last_modified"), f"{context}.last_modified")
+    created = parse_timestamp(record.get("created"), f"{context}.created")
+    last_modified = parse_timestamp(
+        record.get("last_modified"),
+        f"{context}.last_modified",
+    )
+    if created > last_modified:
+        raise CalendarDataError(f"{context}.created 不能晚于 last_modified")
     document_title = require_text(record, "document_title", context)
     document_number = require_text(record, "document_number", context)
     source_url = require_text(record, "source_url", context)
@@ -203,6 +209,7 @@ def validate_year(record: dict[str, Any], source: Path) -> dict[str, Any]:
     return {
         "year": year,
         "revision": revision,
+        "created": created,
         "last_modified": last_modified,
         "document_title": document_title,
         "document_number": document_number,
@@ -303,17 +310,19 @@ def event_lines(
     description: str,
     categories: Iterable[str],
     source_url: str | None,
-    timestamp: datetime,
+    created: datetime,
+    last_modified: datetime,
     sequence: int,
     reminders: Iterable[tuple[str, str]] = (),
 ) -> list[str]:
-    stamp = format_timestamp(timestamp)
+    created_stamp = format_timestamp(created)
+    modified_stamp = format_timestamp(last_modified)
     lines = [
         "BEGIN:VEVENT",
         f"UID:{uid}",
-        f"DTSTAMP:{stamp}",
-        f"CREATED:{stamp}",
-        f"LAST-MODIFIED:{stamp}",
+        f"DTSTAMP:{modified_stamp}",
+        f"CREATED:{created_stamp}",
+        f"LAST-MODIFIED:{modified_stamp}",
         f"SEQUENCE:{sequence}",
         f"DTSTART;VALUE=DATE:{format_date(start)}",
         f"DTEND;VALUE=DATE:{format_date(end + timedelta(days=1))}",
@@ -462,7 +471,8 @@ def generate_calendar(years: list[dict[str, Any]]) -> bytes:
                             description=description,
                             categories=("中国大陆节假日", "放假"),
                             source_url=year["source_url"],
-                            timestamp=year["last_modified"],
+                            created=year["created"],
+                            last_modified=year["last_modified"],
                             sequence=year["revision"],
                             reminders=reminders,
                         ),
@@ -490,7 +500,8 @@ def generate_calendar(years: list[dict[str, Any]]) -> bytes:
                             description=workday_description,
                             categories=("中国大陆节假日", "补班"),
                             source_url=year["source_url"],
-                            timestamp=year["last_modified"],
+                            created=year["created"],
+                            last_modified=year["last_modified"],
                             sequence=year["revision"],
                             reminders=(
                                 (
@@ -535,7 +546,8 @@ def generate_calendar(years: list[dict[str, Any]]) -> bytes:
                         description=observance_description,
                         categories=("纪念日",),
                         source_url=observance["source_url"],
-                        timestamp=year["last_modified"],
+                        created=year["created"],
+                        last_modified=year["last_modified"],
                         sequence=year["revision"],
                         reminders=(
                             (
@@ -568,7 +580,8 @@ def generate_calendar(years: list[dict[str, Any]]) -> bytes:
                     description=CALENDAR_UPDATE_EVENT_TEXT,
                     categories=("日历维护",),
                     source_url=None,
-                    timestamp=year["last_modified"],
+                    created=year["created"],
+                    last_modified=year["last_modified"],
                     sequence=year["revision"],
                     reminders=(
                         (

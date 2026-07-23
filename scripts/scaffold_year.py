@@ -67,7 +67,7 @@ def build_observances(year: int) -> list[dict[str, Any]]:
 
 
 def build_year(year: int) -> dict[str, Any]:
-    modified = (
+    timestamp = (
         datetime.now(timezone.utc)
         .replace(microsecond=0)
         .isoformat()
@@ -76,7 +76,8 @@ def build_year(year: int) -> dict[str, Any]:
     return {
         "year": year,
         "revision": 0,
-        "last_modified": modified,
+        "created": timestamp,
+        "last_modified": timestamp,
         "document_title": f"国务院办公厅关于{year}年部分节假日安排的通知",
         "document_number": "TODO",
         "source_url": "TODO",

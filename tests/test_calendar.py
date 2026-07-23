@@ -7,10 +7,11 @@ from scripts.generate_calendar import (
     DEFAULT_DATA_DIR,
     DEFAULT_OUTPUT,
     annual_update_warning,
+    format_timestamp,
     generate_calendar,
     load_years,
 )
-from scripts.scaffold_year import build_observances
+from scripts.scaffold_year import build_observances, build_year
 
 
 class CalendarTests(unittest.TestCase):
@@ -77,7 +78,8 @@ class CalendarTests(unittest.TestCase):
         )
 
     def test_calendar_color_and_reminder_prefixes(self) -> None:
-        self.assertIn("X-APPLE-CALENDAR-COLOR:#007AFF", self.unfolded)
+        self.assertIn("X-APPLE-CALENDAR-COLOR:#FF3B30", self.unfolded)
+        self.assertNotIn("X-APPLE-CALENDAR-COLOR:#007AFF", self.unfolded)
         self.assertNotIn("X-APPLE-CALENDAR-COLOR:#D70015", self.unfolded)
 
         observance_prefixes = {
@@ -335,6 +337,20 @@ class CalendarTests(unittest.TestCase):
         )
         self.assertNotIn("TRIGGER:-PT10H", block)
 
+    def test_event_timestamps_use_creation_and_revision_times(self) -> None:
+        year = next(item for item in self.years if item["year"] == 2026)
+        created = format_timestamp(year["created"])
+        modified = format_timestamp(year["last_modified"])
+        self.assertNotEqual(created, modified)
+
+        for block in self.events_by_uid.values():
+            if "DTSTART;VALUE=DATE:2026" not in block:
+                continue
+            self.assertIn(f"CREATED:{created}", block)
+            self.assertIn(f"DTSTAMP:{modified}", block)
+            self.assertIn(f"LAST-MODIFIED:{modified}", block)
+            self.assertIn("SEQUENCE:14", block)
+
     def test_single_day_holiday_reminder_copy(self) -> None:
         source_year = self.years[0]
         holiday_date = date(2026, 3, 1)
@@ -397,6 +413,10 @@ class CalendarTests(unittest.TestCase):
         self.assertEqual(observances["mothers-day"]["date"], "2026-05-10")
         self.assertEqual(observances["fathers-day"]["date"], "2026-06-21")
         self.assertEqual(observances["qixi-festival"]["date"], "TODO")
+
+        year = build_year(2027)
+        self.assertEqual(year["revision"], 0)
+        self.assertEqual(year["created"], year["last_modified"])
 
     def test_rfc5545_line_endings_and_lengths(self) -> None:
         self.assertNotIn(b"\n", self.calendar.replace(b"\r\n", b""))

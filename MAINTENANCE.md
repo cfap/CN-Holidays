@@ -43,8 +43,11 @@ make new-year YEAR=2027
 1. 根据国务院办公厅通知填写 `document_number`、`source_url`、放假区间、
    补班日期和放假安排摘要。
 2. 完成七夕节的公历日期和说明。
-3. 确认新年度使用 `revision: 0`；若修改已经发布的年度，则递增其
-   `revision` 并更新 `last_modified`。
+3. 确认新年度使用 `revision: 0`，且 `created` 与 `last_modified`
+   初始值相同。发布后保持 `created` 不变；仅当事件的日期、标题、说明、
+   来源、分类或提醒等内容实际变化时，才递增 `revision` 并更新
+   `last_modified`。仅修改文档或测试、进行不改变 ICS 结果的代码重构，
+   以及使用相同数据重复生成日历时，无需更新这些元数据。
 4. 搜索并清除全部占位内容：
 
    ```bash
