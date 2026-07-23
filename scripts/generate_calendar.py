@@ -18,6 +18,15 @@ DEFAULT_OUTPUT = ROOT / "docs" / "cn-holidays.ics"
 ID_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 PREVIOUS_DAY_REMINDER_TRIGGER = "-PT10H"
 SAME_DAY_REMINDER_TRIGGER = "PT9H"
+CALENDAR_COLOR = "#007AFF"
+HOLIDAY_PREFIX = "🏖️ "
+WORKDAY_PREFIX = "💔 "
+OBSERVANCE_PREFIXES = {
+    "valentines-day": "💕 ",
+    "qixi-festival": "💕 ",
+    "mothers-day": "👩 ",
+    "fathers-day": "👨 ",
+}
 ANNUAL_UPDATE_REMINDER = (11, 15)
 CALENDAR_UPDATE_EVENT_MONTH_DAY = (12, 1)
 CALENDAR_UPDATE_EVENT_TEXT = "日历订阅源需要更新到明年"
@@ -342,7 +351,7 @@ def generate_calendar(years: list[dict[str, Any]]) -> bytes:
         "METHOD:PUBLISH",
         f"X-WR-CALNAME:{escape_text('中国大陆节假日与纪念日')}",
         "X-WR-TIMEZONE:Asia/Shanghai",
-        "X-APPLE-CALENDAR-COLOR:#D70015",
+        f"X-APPLE-CALENDAR-COLOR:{CALENDAR_COLOR}",
         "REFRESH-INTERVAL;VALUE=DURATION:P1D",
         "X-PUBLISHED-TTL:PT24H",
         "X-WR-CALDESC:"
@@ -365,29 +374,49 @@ def generate_calendar(years: list[dict[str, Any]]) -> bytes:
                 holiday_date = holiday["start"] + timedelta(days=day_index)
                 day_number = day_index + 1
                 if holiday_days == 1:
-                    summary = holiday["name"]
+                    summary = (
+                        f"{HOLIDAY_PREFIX}{holiday['name']}"
+                    )
                     day_description = f"{holiday['name']}假期，共1天。"
                 elif day_number == holiday_days:
-                    summary = f"{holiday['name']}假期（最后一天）"
+                    summary = (
+                        f"{HOLIDAY_PREFIX}"
+                        f"{holiday['name']}假期（最后一天）"
+                    )
                     day_description = (
                         f"今天是{holiday['name']}假期最后一天，"
                         f"也是第{day_number}天（共{holiday_days}天）。"
                     )
                 else:
-                    summary = f"{holiday['name']}假期（第{day_number}天）"
+                    summary = (
+                        f"{HOLIDAY_PREFIX}"
+                        f"{holiday['name']}假期（第{day_number}天）"
+                    )
                     day_description = (
                         f"今天是{holiday['name']}假期第{day_number}天，"
                         f"共{holiday_days}天。"
                     )
 
                 if holiday_days == 1:
-                    same_day_reminder = f"今天是{holiday['name']}"
+                    same_day_reminder = (
+                        f"{HOLIDAY_PREFIX}"
+                        f"今天是{holiday['name']}"
+                    )
                 elif day_number == 1:
-                    same_day_reminder = f"{holiday['name']}假期第1天"
+                    same_day_reminder = (
+                        f"{HOLIDAY_PREFIX}"
+                        f"{holiday['name']}假期第1天"
+                    )
                 elif day_number == holiday_days:
-                    same_day_reminder = f"{holiday['name']}假期最后一天"
+                    same_day_reminder = (
+                        f"{HOLIDAY_PREFIX}"
+                        f"{holiday['name']}假期最后一天"
+                    )
                 else:
-                    same_day_reminder = f"{holiday['name']}假期第{day_number}天"
+                    same_day_reminder = (
+                        f"{HOLIDAY_PREFIX}"
+                        f"{holiday['name']}假期第{day_number}天"
+                    )
 
                 reminders = [
                     (SAME_DAY_REMINDER_TRIGGER, same_day_reminder),
@@ -397,6 +426,7 @@ def generate_calendar(years: list[dict[str, Any]]) -> bytes:
                         0,
                         (
                             PREVIOUS_DAY_REMINDER_TRIGGER,
+                            f"{HOLIDAY_PREFIX}"
                             f"明天是{holiday['name']}",
                         ),
                     )
@@ -405,6 +435,7 @@ def generate_calendar(years: list[dict[str, Any]]) -> bytes:
                         0,
                         (
                             PREVIOUS_DAY_REMINDER_TRIGGER,
+                            f"{HOLIDAY_PREFIX}"
                             f"明天开始{holiday['name']}放假",
                         ),
                     )
@@ -413,6 +444,7 @@ def generate_calendar(years: list[dict[str, Any]]) -> bytes:
                         0,
                         (
                             PREVIOUS_DAY_REMINDER_TRIGGER,
+                            f"{HOLIDAY_PREFIX}"
                             f"明天是{holiday['name']}假期最后一天",
                         ),
                     )
@@ -462,7 +494,9 @@ def generate_calendar(years: list[dict[str, Any]]) -> bytes:
                             ),
                             start=workday,
                             end=workday,
-                            summary=f"{holiday['name']}（补班）",
+                            summary=(
+                                f"{WORKDAY_PREFIX}{holiday['name']}（补班）"
+                            ),
                             description=workday_description,
                             categories=("中国大陆节假日", "补班"),
                             source_url=year["source_url"],
@@ -471,11 +505,12 @@ def generate_calendar(years: list[dict[str, Any]]) -> bytes:
                             reminders=(
                                 (
                                     PREVIOUS_DAY_REMINDER_TRIGGER,
+                                    f"{WORKDAY_PREFIX}"
                                     f"明天是{holiday['name']}补班",
                                 ),
                                 (
                                     SAME_DAY_REMINDER_TRIGGER,
-                                    f"{holiday['name']}补班",
+                                    f"{WORKDAY_PREFIX}{holiday['name']}补班",
                                 ),
                             ),
                         ),
@@ -483,6 +518,10 @@ def generate_calendar(years: list[dict[str, Any]]) -> bytes:
                 )
 
         for observance in year["observances"]:
+            observance_prefix = OBSERVANCE_PREFIXES.get(
+                observance["id"],
+                HOLIDAY_PREFIX,
+            )
             observance_description = (
                 f"{observance['basis']}\n"
                 "该日为纪念日，不属于法定放假安排。"
@@ -502,7 +541,7 @@ def generate_calendar(years: list[dict[str, Any]]) -> bytes:
                         ),
                         start=observance_date,
                         end=observance_date,
-                        summary=observance["name"],
+                        summary=f"{observance_prefix}{observance['name']}",
                         description=observance_description,
                         categories=("纪念日",),
                         source_url=observance["source_url"],
@@ -511,6 +550,7 @@ def generate_calendar(years: list[dict[str, Any]]) -> bytes:
                         reminders=(
                             (
                                 SAME_DAY_REMINDER_TRIGGER,
+                                f"{observance_prefix}"
                                 f"今天是{observance['name']}",
                             ),
                         ),
