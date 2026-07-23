@@ -73,10 +73,23 @@ class CalendarTests(unittest.TestCase):
     def test_holiday_days_are_individual_all_day_events(self) -> None:
         self.assertIn("DTSTART;VALUE=DATE:20260215", self.unfolded)
         self.assertIn("DTEND;VALUE=DATE:20260216", self.unfolded)
-        self.assertIn("春节（第1天）", self.summaries)
-        self.assertIn("春节（第8天）", self.summaries)
-        self.assertIn("春节（最后一天）", self.summaries)
-        self.assertNotIn("春节（第9天）", self.summaries)
+        self.assertIn("春节假期（第1天）", self.summaries)
+        self.assertIn("春节假期（第8天）", self.summaries)
+        self.assertIn("春节假期（最后一天）", self.summaries)
+        self.assertNotIn("春节假期（第9天）", self.summaries)
+        self.assertIn(
+            "DESCRIPTION:今天是春节假期第1天，共9天。",
+            self.events_by_uid[
+                "holiday-20260215-spring-festival@cncalendar"
+            ],
+        )
+        self.assertIn(
+            "DESCRIPTION:今天是春节假期最后一天，"
+            "也是第9天（共9天）。",
+            self.events_by_uid[
+                "holiday-20260223-spring-festival@cncalendar"
+            ],
+        )
 
     def test_workday_titles_use_holiday_name(self) -> None:
         self.assertEqual(self.summaries_2026.count("春节（补班）"), 2)
@@ -213,7 +226,7 @@ class CalendarTests(unittest.TestCase):
         ]
         self.assertEqual(middle_day.count("BEGIN:VALARM"), 1)
         self.assertIn("TRIGGER:PT9H", middle_day)
-        self.assertIn("DESCRIPTION:元旦放假第2天", middle_day)
+        self.assertIn("DESCRIPTION:元旦假期第2天", middle_day)
         self.assertNotIn("TRIGGER:-PT10H", middle_day)
 
         first_day = self.events_by_uid[
@@ -221,19 +234,19 @@ class CalendarTests(unittest.TestCase):
         ]
         self.assertEqual(first_day.count("BEGIN:VALARM"), 2)
         self.assertIn(
-            "DESCRIPTION:明天是元旦放假第一天",
+            "DESCRIPTION:明天开始元旦放假",
             first_day,
         )
         self.assertIn(
-            "DESCRIPTION:元旦放假第一天",
+            "DESCRIPTION:元旦假期第1天",
             first_day,
         )
         self.assertIn(
-            "DESCRIPTION:明天是元旦放假最后一天",
+            "DESCRIPTION:明天是元旦假期最后一天",
             self.events_by_uid["holiday-20260103-new-year@cncalendar"],
         )
         self.assertIn(
-            "DESCRIPTION:元旦放假最后一天",
+            "DESCRIPTION:元旦假期最后一天",
             self.events_by_uid["holiday-20260103-new-year@cncalendar"],
         )
         workday = self.events_by_uid[
@@ -275,7 +288,7 @@ class CalendarTests(unittest.TestCase):
                     "start": holiday_date,
                     "end": holiday_date,
                     "workdays": [],
-                    "schedule": "3月1日放假，共1天。",
+                    "schedule": "3月1日放假。",
                 }
             ],
             "observances": [],
@@ -287,6 +300,7 @@ class CalendarTests(unittest.TestCase):
             1,
         )[1].split("END:VEVENT", 1)[0]
         self.assertEqual(holiday_block.count("BEGIN:VALARM"), 2)
+        self.assertIn("DESCRIPTION:测试节日假期，共1天。", holiday_block)
         self.assertIn("DESCRIPTION:明天是测试节日", holiday_block)
         self.assertIn("DESCRIPTION:今天是测试节日", holiday_block)
         self.assertNotIn(

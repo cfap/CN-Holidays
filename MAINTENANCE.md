@@ -41,7 +41,7 @@ make new-year YEAR=2027
 ## 年度检查清单
 
 1. 根据国务院办公厅通知填写 `document_number`、`source_url`、放假区间、
-   补班日期和通知原文摘要。
+   补班日期和放假安排摘要。
 2. 完成七夕节的公历日期和说明。
 3. 确认新年度使用 `revision: 0`；若修改已经发布的年度，则递增其
    `revision` 并更新 `last_modified`。

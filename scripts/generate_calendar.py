@@ -368,13 +368,13 @@ def generate_calendar(years: list[dict[str, Any]]) -> bytes:
                     summary = holiday["name"]
                     day_description = f"{holiday['name']}假期，共1天。"
                 elif day_number == holiday_days:
-                    summary = f"{holiday['name']}（最后一天）"
+                    summary = f"{holiday['name']}假期（最后一天）"
                     day_description = (
                         f"今天是{holiday['name']}假期最后一天，"
                         f"也是第{day_number}天（共{holiday_days}天）。"
                     )
                 else:
-                    summary = f"{holiday['name']}（第{day_number}天）"
+                    summary = f"{holiday['name']}假期（第{day_number}天）"
                     day_description = (
                         f"今天是{holiday['name']}假期第{day_number}天，"
                         f"共{holiday_days}天。"
@@ -383,11 +383,11 @@ def generate_calendar(years: list[dict[str, Any]]) -> bytes:
                 if holiday_days == 1:
                     same_day_reminder = f"今天是{holiday['name']}"
                 elif day_number == 1:
-                    same_day_reminder = f"{holiday['name']}放假第一天"
+                    same_day_reminder = f"{holiday['name']}假期第1天"
                 elif day_number == holiday_days:
-                    same_day_reminder = f"{holiday['name']}放假最后一天"
+                    same_day_reminder = f"{holiday['name']}假期最后一天"
                 else:
-                    same_day_reminder = f"{holiday['name']}放假第{day_number}天"
+                    same_day_reminder = f"{holiday['name']}假期第{day_number}天"
 
                 reminders = [
                     (SAME_DAY_REMINDER_TRIGGER, same_day_reminder),
@@ -405,7 +405,7 @@ def generate_calendar(years: list[dict[str, Any]]) -> bytes:
                         0,
                         (
                             PREVIOUS_DAY_REMINDER_TRIGGER,
-                            f"明天是{holiday['name']}放假第一天",
+                            f"明天开始{holiday['name']}放假",
                         ),
                     )
                 elif day_number == holiday_days:
@@ -413,7 +413,7 @@ def generate_calendar(years: list[dict[str, Any]]) -> bytes:
                         0,
                         (
                             PREVIOUS_DAY_REMINDER_TRIGGER,
-                            f"明天是{holiday['name']}放假最后一天",
+                            f"明天是{holiday['name']}假期最后一天",
                         ),
                     )
 
