@@ -374,24 +374,16 @@ def generate_calendar(years: list[dict[str, Any]]) -> bytes:
                 holiday_date = holiday["start"] + timedelta(days=day_index)
                 day_number = day_index + 1
                 if holiday_days == 1:
-                    summary = (
-                        f"{HOLIDAY_PREFIX}{holiday['name']}"
-                    )
+                    summary = holiday["name"]
                     day_description = f"{holiday['name']}假期，共1天。"
                 elif day_number == holiday_days:
-                    summary = (
-                        f"{HOLIDAY_PREFIX}"
-                        f"{holiday['name']}假期（最后一天）"
-                    )
+                    summary = f"{holiday['name']}假期（最后一天）"
                     day_description = (
                         f"今天是{holiday['name']}假期最后一天，"
                         f"也是第{day_number}天（共{holiday_days}天）。"
                     )
                 else:
-                    summary = (
-                        f"{HOLIDAY_PREFIX}"
-                        f"{holiday['name']}假期（第{day_number}天）"
-                    )
+                    summary = f"{holiday['name']}假期（第{day_number}天）"
                     day_description = (
                         f"今天是{holiday['name']}假期第{day_number}天，"
                         f"共{holiday_days}天。"
@@ -494,9 +486,7 @@ def generate_calendar(years: list[dict[str, Any]]) -> bytes:
                             ),
                             start=workday,
                             end=workday,
-                            summary=(
-                                f"{WORKDAY_PREFIX}{holiday['name']}（补班）"
-                            ),
+                            summary=f"{holiday['name']}（补班）",
                             description=workday_description,
                             categories=("中国大陆节假日", "补班"),
                             source_url=year["source_url"],
@@ -541,7 +531,7 @@ def generate_calendar(years: list[dict[str, Any]]) -> bytes:
                         ),
                         start=observance_date,
                         end=observance_date,
-                        summary=f"{observance_prefix}{observance['name']}",
+                        summary=observance["name"],
                         description=observance_description,
                         categories=("纪念日",),
                         source_url=observance["source_url"],

@@ -62,10 +62,10 @@ class CalendarTests(unittest.TestCase):
             sum(
                 title
                 in {
-                    "💕 情人节",
-                    "👩 母亲节",
-                    "👨 父亲节",
-                    "💕 七夕节",
+                    "情人节",
+                    "母亲节",
+                    "父亲节",
+                    "七夕节",
                 }
                 for title in self.summaries_2026
             ),
@@ -76,7 +76,7 @@ class CalendarTests(unittest.TestCase):
             1,
         )
 
-    def test_calendar_color_and_event_prefixes(self) -> None:
+    def test_calendar_color_and_reminder_prefixes(self) -> None:
         self.assertIn("X-APPLE-CALENDAR-COLOR:#007AFF", self.unfolded)
         self.assertNotIn("X-APPLE-CALENDAR-COLOR:#D70015", self.unfolded)
 
@@ -88,6 +88,9 @@ class CalendarTests(unittest.TestCase):
         }
         for uid, block in self.events_by_uid.items():
             summary = self.summaries_by_uid[uid]
+            self.assertFalse(
+                summary.startswith(("🏖️ ", "💔 ", "💕 ", "👩 ", "👨 "))
+            )
             alarm_descriptions = [
                 next(
                     line.removeprefix("DESCRIPTION:")
@@ -97,7 +100,6 @@ class CalendarTests(unittest.TestCase):
                 for alarm in block.split("BEGIN:VALARM")[1:]
             ]
             if uid.startswith("holiday-"):
-                self.assertTrue(summary.startswith("🏖️ "))
                 self.assertTrue(
                     all(
                         description.startswith("🏖️ ")
@@ -106,7 +108,6 @@ class CalendarTests(unittest.TestCase):
                 )
             elif uid.startswith("observance-"):
                 expected_prefix = observance_prefixes[uid]
-                self.assertTrue(summary.startswith(expected_prefix))
                 self.assertTrue(
                     all(
                         description.startswith(expected_prefix)
@@ -114,7 +115,6 @@ class CalendarTests(unittest.TestCase):
                     )
                 )
             elif uid.startswith("workday-"):
-                self.assertTrue(summary.startswith("💔 "))
                 self.assertTrue(
                     all(
                         description.startswith("💔 ")
@@ -125,10 +125,10 @@ class CalendarTests(unittest.TestCase):
     def test_holiday_days_are_individual_all_day_events(self) -> None:
         self.assertIn("DTSTART;VALUE=DATE:20260215", self.unfolded)
         self.assertIn("DTEND;VALUE=DATE:20260216", self.unfolded)
-        self.assertIn("🏖️ 春节假期（第1天）", self.summaries)
-        self.assertIn("🏖️ 春节假期（第8天）", self.summaries)
-        self.assertIn("🏖️ 春节假期（最后一天）", self.summaries)
-        self.assertNotIn("🏖️ 春节假期（第9天）", self.summaries)
+        self.assertIn("春节假期（第1天）", self.summaries)
+        self.assertIn("春节假期（第8天）", self.summaries)
+        self.assertIn("春节假期（最后一天）", self.summaries)
+        self.assertNotIn("春节假期（第9天）", self.summaries)
         self.assertIn(
             "DESCRIPTION:今天是春节假期第1天，共9天。",
             self.events_by_uid[
@@ -144,10 +144,10 @@ class CalendarTests(unittest.TestCase):
         )
 
     def test_workday_titles_use_holiday_name(self) -> None:
-        self.assertEqual(self.summaries_2026.count("💔 春节（补班）"), 2)
-        self.assertEqual(self.summaries_2026.count("💔 国庆节（补班）"), 2)
-        self.assertIn("💔 元旦（补班）", self.summaries_2026)
-        self.assertIn("💔 劳动节（补班）", self.summaries_2026)
+        self.assertEqual(self.summaries_2026.count("春节（补班）"), 2)
+        self.assertEqual(self.summaries_2026.count("国庆节（补班）"), 2)
+        self.assertIn("元旦（补班）", self.summaries_2026)
+        self.assertIn("劳动节（补班）", self.summaries_2026)
         self.assertNotIn("调休上班", self.unfolded)
         self.assertEqual(
             sum(
@@ -194,7 +194,7 @@ class CalendarTests(unittest.TestCase):
         }
         for uid, (summary, calendar_date, prefix) in expected.items():
             block = self.events_by_uid[uid]
-            self.assertIn(f"SUMMARY:{prefix}{summary}", block)
+            self.assertIn(f"SUMMARY:{summary}", block)
             self.assertIn(f"DTSTART;VALUE=DATE:{calendar_date}", block)
             self.assertIn("CATEGORIES:纪念日", block)
             self.assertEqual(block.count("BEGIN:VALARM"), 1)
@@ -360,7 +360,7 @@ class CalendarTests(unittest.TestCase):
         )[1].split("END:VEVENT", 1)[0]
         self.assertEqual(holiday_block.count("BEGIN:VALARM"), 2)
         self.assertIn("DESCRIPTION:测试节日假期，共1天。", holiday_block)
-        self.assertIn("SUMMARY:🏖️ 测试节日", holiday_block)
+        self.assertIn("SUMMARY:测试节日", holiday_block)
         self.assertIn("DESCRIPTION:🏖️ 明天是测试节日", holiday_block)
         self.assertIn("DESCRIPTION:🏖️ 今天是测试节日", holiday_block)
         self.assertNotIn(
