@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#c9202f">
-  <title>中国大陆法定节假日与调休</title>
+  <title>中国大陆节假日与纪念日</title>
   <style>
     :root {
       color-scheme: light;
@@ -99,19 +99,20 @@
 <body>
   <main>
     <div class="mark" aria-hidden="true">休</div>
-    <h1>中国大陆法定节假日与调休</h1>
-    <p class="lead">适用于 iPhone、iPad 和 Mac 的只读订阅日历。标注官方放假区间与补班日期，订阅后可随源文件更新。</p>
+    <h1>中国大陆节假日与纪念日</h1>
+    <p class="lead">适用于 iPhone、iPad 和 Mac 的只读订阅日历。标注官方放假区间、补班日期及情人节、母亲节、父亲节和七夕节，订阅后可随源文件更新。</p>
     <div class="facts" aria-label="数据摘要">
       <span>按官方年度通知更新</span>
       <span>法定节假日</span>
       <span>含补班日期</span>
+      <span>含精选纪念日</span>
     </div>
     <div class="actions">
       <a class="primary" id="subscribe" href="cn-holidays.ics">订阅到系统日历</a>
       <button class="secondary" id="copy" type="button">复制 HTTPS 订阅地址</button>
       <a class="secondary" href="cn-holidays.ics" download>下载 .ics 文件</a>
     </div>
-    <p class="hint">数据依据<a href="https://www.gov.cn/zhengce/zhengceku/202511/content_7047091.htm">国务院办公厅 2026 年节假日安排通知</a>整理。日历为只读订阅，不含提醒，也不会占用“忙碌”时间。</p>
+    <p class="hint">法定安排依据<a href="https://www.gov.cn/zhengce/zhengceku/202511/content_7047091.htm">国务院办公厅 2026 年节假日安排通知</a>，七夕日期依据<a href="https://www.hko.gov.hk/tc/gts/time/calendar/pdf/files/2026.pdf">香港天文台农历对照表</a>。所有放假日、补班日期和纪念日设有当天上午 9 点提醒；补班日期及每段假期首尾日另设前一天下午 2 点提醒。每年公历 12 月 1 日另有订阅源年度更新提醒（需允许系统日历通知）。纪念日不代表放假。</p>
   </main>
   <script>
     const calendarUrl = new URL("cn-holidays.ics", window.location.href);

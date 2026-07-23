@@ -1,10 +1,14 @@
-# 中国大陆法定节假日与调休订阅日历
+# 中国大陆法定节假日、补班与纪念日订阅日历
 
-这是一个可供 iPhone、iPad、Mac 及其他 iCalendar 客户端订阅的只读日历源。当前只包含 **2026 年**国务院办公厅公布的放假与调休安排；后续年份可按相同格式增补。
+这是一个可供 iPhone、iPad、Mac 及其他 iCalendar 客户端订阅的只读日历源。当前包含 **2026 年**国务院办公厅公布的放假与补班安排，以及情人节、母亲节、父亲节和七夕节；后续年份可按相同格式增补。
+
+> [!IMPORTANT]
+> 本项目需要每年更新。每年 11 月 15 日起，`make check` 会在缺少下一年度数据时给出提示。换电脑维护时请按 [`MAINTENANCE.md`](MAINTENANCE.md) 操作。
 
 - 可发布文件：[`docs/cn-holidays.ics`](docs/cn-holidays.ics)
 - 订阅落地页：[`docs/index.html`](docs/index.html)
 - 官方依据：[国务院办公厅关于2026年部分节假日安排的通知（国办发明电〔2025〕7号）](https://www.gov.cn/zhengce/zhengceku/202511/content_7047091.htm)
+- 农历依据：[香港天文台 2026 年公历与农历日期对照表](https://www.hko.gov.hk/tc/gts/time/calendar/pdf/files/2026.pdf)
 
 ## 2026 年数据
 
@@ -18,33 +22,60 @@
 | 中秋节 | 9 月 25 日—9 月 27 日 | 无 |
 | 国庆节 | 10 月 1 日—10 月 7 日 | 9 月 20 日、10 月 10 日 |
 
-日程均为全天日程，使用 `TRANSP:TRANSPARENT`，不会把个人空闲状态标记为忙碌。连续假期按天拆分：除最后一天显示为“节日（最后一天）”外，其余日期显示为“节日（第 n 天）”；补班日期显示为“节日（补班）”。每个事件的 `DTEND` 均按 RFC 5545 使用“不包含结束日”的写法。
+### 纪念日
+
+| 名称 | 2026 年日期 | 日期规则 |
+| --- | --- | --- |
+| 情人节 | 2 月 14 日 | 每年 2 月 14 日 |
+| 母亲节 | 5 月 10 日 | 5 月第二个星期日 |
+| 父亲节 | 6 月 21 日 | 6 月第三个星期日 |
+| 七夕节 | 8 月 19 日 | 农历七月初七 |
+
+### 事件构成与显示规则
+
+当前 2026 年日历共生成 44 个全天事件：
+
+| 事件类型 | 数量 | 标题规则 |
+| --- | ---: | --- |
+| 放假日 | 33 | 单日假期显示节日名；连续假期依次显示“节日（第 n 天）”，最后一天显示“节日（最后一天）” |
+| 补班日期 | 6 | “节日（补班）” |
+| 纪念日 | 4 | 情人节、母亲节、父亲节和七夕节 |
+| 年度维护 | 1 | 12 月 1 日显示“日历订阅源需要更新到明年” |
+
+所有事件均使用 `TRANSP:TRANSPARENT`，不会把个人空闲状态标记为忙碌。纪念日仅作日期标注，不代表法定放假。每个事件的 `DTEND` 均按 RFC 5545 使用“不包含结束日”的写法。
+
+### 提醒规则
+
+| 类型 | 提醒时间 | 提醒文案 |
+| --- | --- | --- |
+| 单日假期 | 前一天 14:00 | `明天是{节日名}` |
+| 单日假期 | 当天 09:00 | `今天是{节日名}` |
+| 多日假期第一天 | 前一天 14:00 | `明天是{节日名}放假第一天` |
+| 多日假期第一天 | 当天 09:00 | `{节日名}放假第一天` |
+| 多日假期中间日 | 当天 09:00 | `{节日名}放假第{n}天` |
+| 多日假期最后一天 | 前一天 14:00 | `明天是{节日名}放假最后一天` |
+| 多日假期最后一天 | 当天 09:00 | `{节日名}放假最后一天` |
+| 补班日期 | 前一天 14:00 | `明天是{节日名}补班` |
+| 补班日期 | 当天 09:00 | `{节日名}补班` |
+| 纪念日 | 当天 09:00 | `今天是{纪念日名}` |
+| 年度维护 | 12 月 1 日 09:00 | `日历订阅源需要更新到明年` |
+
+当天上午 9 点使用相对事件开始时间的 `TRIGGER:PT9H`；前一天下午 2 点使用 `TRIGGER:-PT10H`。提醒能否显示取决于客户端的日历通知设置。
 
 ## 发布到 GitHub Pages
 
-先在 GitHub 新建一个空的公开仓库，例如 `CNCalendar`。然后在本目录执行（把 `<你的用户名>` 替换为实际 GitHub 用户名）：
-
-```bash
-git init
-git add .
-git commit -m "Add 2026 China holiday calendar"
-git branch -M main
-git remote add origin https://github.com/<你的用户名>/CNCalendar.git
-git push -u origin main
-```
-
-在 GitHub 仓库中打开 **Settings → Pages**：
+当前仓库为 [`cfap/CN-Holidays`](https://github.com/cfap/CN-Holidays)，发布内容位于 `docs/`。首次启用 GitHub Pages 时，在仓库中打开 **Settings → Pages**：
 
 1. `Source` 选择 **Deploy from a branch**。
 2. 分支选择 **main**，目录选择 **/docs**。
 3. 点击 **Save**，等待 Pages 发布完成。
 
-发布后地址为：
+按当前账号和仓库名，启用后的发布地址为：
 
-- 落地页：`https://<你的用户名>.github.io/CNCalendar/`
-- HTTPS 订阅源：`https://<你的用户名>.github.io/CNCalendar/cn-holidays.ics`
+- 落地页：`https://cfap.github.io/CN-Holidays/`
+- HTTPS 订阅源：`https://cfap.github.io/CN-Holidays/cn-holidays.ics`
 
-如果仓库名不是 `CNCalendar`，请同步替换 URL 中的仓库名。GitHub Pages 的发布步骤可参考 [GitHub 官方文档](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site)。
+后续提交并推送 `main` 分支后，Pages 会重新发布 `docs/` 中的落地页和订阅文件。如果将项目 Fork 到其他账号或修改仓库名，需要同步替换上述 URL 中的账号或仓库路径。GitHub Pages 的发布步骤可参考 [GitHub 官方文档](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site)。
 
 ## 在 iPhone 上订阅
 
@@ -59,7 +90,13 @@ Apple 的最新操作说明见[在 iCloud 中添加日历订阅](https://support
 
 ## 后续增补或修改
 
-年度源数据位于 [`data/2026.json`](data/2026.json)。新增年份时复制一份为 `data/2027.json`，更新年度、官方文件、日期及 `last_modified`；如果修订已经发布过的年度数据，请同时递增 `revision`。
+完整步骤见 [`MAINTENANCE.md`](MAINTENANCE.md)。创建下一年度数据骨架：
+
+```bash
+make new-year YEAR=2027
+```
+
+该命令会自动计算情人节、母亲节和父亲节日期；七夕节必须根据农历对照表人工核对。12 月 1 日的年度维护事件由生成器自动创建，无需写入年度 JSON。年度源数据位于 [`data/`](data/)；如果修订已经发布过的年度数据，请同时递增 `revision` 并更新 `last_modified`。
 
 生成并检查日历：
 
@@ -69,14 +106,22 @@ python3 scripts/generate_calendar.py --check
 python3 -m unittest discover -s tests -v
 ```
 
-也可以运行 `make generate`、`make check` 和 `make test`。提交并推送更新后，GitHub Pages 会重新发布，订阅者无需更换 URL。Apple 客户端的刷新时间由系统控制，不保证推送后立即显示。
+也可以运行 `make generate`、`make check` 和 `make test`：
+
+- `make generate`：读取全部年度 JSON，生成并校验 `docs/cn-holidays.ics`。
+- `make check`：校验年度数据和 RFC 5545 格式，确认已发布的 `.ics` 与当前代码及数据完全一致；每年 11 月 15 日起还会检查下一年度数据是否存在。
+- `make test`：检查日期、事件数量、提醒时间与文案、CRLF 换行和 75 字节折行限制。
+
+提交并推送更新后，GitHub Pages 会重新发布，订阅者无需更换 URL。Apple 客户端的刷新时间由系统控制，不保证推送后立即显示。
 
 ## 文件结构
 
 ```text
 data/2026.json                 # 可维护的官方年度数据
+MAINTENANCE.md                 # 跨设备年度更新步骤与检查清单
 scripts/generate_calendar.py   # 零第三方依赖的 ICS 生成与校验脚本
-tests/test_calendar.py         # 日期、事件数及 RFC 5545 基础检查
+scripts/scaffold_year.py       # 创建下一年度数据骨架
+tests/test_calendar.py         # 日期、事件数、提醒规则及 RFC 5545 检查
 docs/cn-holidays.ics           # 可直接使用及托管的日历源
 docs/index.html                # GitHub Pages 订阅落地页
 ```

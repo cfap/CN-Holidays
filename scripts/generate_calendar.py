@@ -16,6 +16,12 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_DATA_DIR = ROOT / "data"
 DEFAULT_OUTPUT = ROOT / "docs" / "cn-holidays.ics"
 ID_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+PREVIOUS_DAY_REMINDER_TRIGGER = "-PT10H"
+SAME_DAY_REMINDER_TRIGGER = "PT9H"
+ANNUAL_UPDATE_REMINDER = (11, 15)
+CALENDAR_UPDATE_EVENT_MONTH_DAY = (12, 1)
+CALENDAR_UPDATE_EVENT_TEXT = "日历订阅源需要更新到明年"
+CHINA_STANDARD_TIME = timezone(timedelta(hours=8))
 
 
 class CalendarDataError(ValueError):
@@ -139,6 +145,52 @@ def validate_year(record: dict[str, Any], source: Path) -> dict[str, Any]:
         invalid = min(invalid_workdays).isoformat()
         raise CalendarDataError(f"{context} 中的 {invalid} 同时被标记为放假和上班")
 
+    raw_observances = record.get("observances", [])
+    if not isinstance(raw_observances, list):
+        raise CalendarDataError(f"{context}.observances 必须是数组")
+
+    observances: list[dict[str, Any]] = []
+    observance_ids: set[str] = set()
+    for index, raw_observance in enumerate(raw_observances):
+        item_context = f"{context}.observances[{index}]"
+        if not isinstance(raw_observance, dict):
+            raise CalendarDataError(f"{item_context} 必须是对象")
+
+        observance_id = require_text(raw_observance, "id", item_context)
+        if not ID_PATTERN.fullmatch(observance_id):
+            raise CalendarDataError(f"{item_context}.id 只能包含小写字母、数字和连字符")
+        if observance_id in observance_ids:
+            raise CalendarDataError(f"{context} 中存在重复纪念日 id：{observance_id}")
+        observance_ids.add(observance_id)
+
+        name = require_text(raw_observance, "name", item_context)
+        basis = require_text(raw_observance, "basis", item_context)
+        observance_date = parse_date(
+            raw_observance.get("date"),
+            f"{item_context}.date",
+        )
+        if observance_date.year != year:
+            raise CalendarDataError(f"{item_context}.date 必须位于 {year} 年")
+
+        observance_source = raw_observance.get("source_url")
+        if observance_source is not None:
+            if (
+                not isinstance(observance_source, str)
+                or not observance_source.startswith("https://")
+            ):
+                raise CalendarDataError(f"{item_context}.source_url 必须使用 HTTPS")
+            observance_source = observance_source.strip()
+
+        observances.append(
+            {
+                "id": observance_id,
+                "name": name,
+                "date": observance_date,
+                "basis": basis,
+                "source_url": observance_source,
+            }
+        )
+
     return {
         "year": year,
         "revision": revision,
@@ -147,6 +199,7 @@ def validate_year(record: dict[str, Any], source: Path) -> dict[str, Any]:
         "document_number": document_number,
         "source_url": source_url,
         "holidays": holidays,
+        "observances": observances,
     }
 
 
@@ -170,6 +223,24 @@ def load_years(data_dir: Path) -> list[dict[str, Any]]:
         seen_years.add(year["year"])
         years.append(year)
     return sorted(years, key=lambda item: item["year"])
+
+
+def annual_update_warning(
+    years: list[dict[str, Any]],
+    today: date | None = None,
+) -> str | None:
+    current_date = today or datetime.now(CHINA_STANDARD_TIME).date()
+    required_year = current_date.year
+    if (current_date.month, current_date.day) >= ANNUAL_UPDATE_REMINDER:
+        required_year += 1
+
+    latest_year = max(item["year"] for item in years)
+    if latest_year >= required_year:
+        return None
+    return (
+        f"当前数据只覆盖至 {latest_year} 年，请新增 data/{required_year}.json；"
+        "操作步骤见 MAINTENANCE.md"
+    )
 
 
 def escape_text(value: str) -> str:
@@ -222,12 +293,13 @@ def event_lines(
     summary: str,
     description: str,
     categories: Iterable[str],
-    source_url: str,
+    source_url: str | None,
     timestamp: datetime,
     sequence: int,
+    reminders: Iterable[tuple[str, str]] = (),
 ) -> list[str]:
     stamp = format_timestamp(timestamp)
-    return [
+    lines = [
         "BEGIN:VEVENT",
         f"UID:{uid}",
         f"DTSTAMP:{stamp}",
@@ -243,9 +315,21 @@ def event_lines(
         "STATUS:CONFIRMED",
         "TRANSP:TRANSPARENT",
         "X-MICROSOFT-CDO-BUSYSTATUS:FREE",
-        f"URL;VALUE=URI:{source_url}",
-        "END:VEVENT",
     ]
+    if source_url is not None:
+        lines.append(f"URL;VALUE=URI:{source_url}")
+    for trigger, reminder in reminders:
+        lines.extend(
+            (
+                "BEGIN:VALARM",
+                "ACTION:DISPLAY",
+                f"TRIGGER:{trigger}",
+                f"DESCRIPTION:{escape_text(reminder)}",
+                "END:VALARM",
+            )
+        )
+    lines.append("END:VEVENT")
+    return lines
 
 
 def generate_calendar(years: list[dict[str, Any]]) -> bytes:
@@ -256,14 +340,19 @@ def generate_calendar(years: list[dict[str, Any]]) -> bytes:
         "VERSION:2.0",
         "CALSCALE:GREGORIAN",
         "METHOD:PUBLISH",
-        f"X-WR-CALNAME:{escape_text('中国大陆法定节假日与调休')}",
+        f"X-WR-CALNAME:{escape_text('中国大陆节假日与纪念日')}",
         "X-WR-TIMEZONE:Asia/Shanghai",
         "X-APPLE-CALENDAR-COLOR:#D70015",
         "REFRESH-INTERVAL;VALUE=DURATION:P1D",
         "X-PUBLISHED-TTL:PT24H",
         "X-WR-CALDESC:"
         + escape_text(
-            f"依据国务院办公厅年度通知整理，包含放假区间与补班日期。当前数据覆盖 {year_label} 年。"
+            "依据国务院办公厅年度通知整理，包含放假区间与补班日期。"
+            "另含情人节、母亲节、父亲节和七夕节等纪念日。"
+            "补班日期及每段假期首尾日设有前一天下午2点提醒。"
+            "所有放假日、补班日期和纪念日设有当天上午9点提醒。"
+            "每年公历12月1日设有日历订阅源年度更新提醒。"
+            f"当前数据覆盖 {year_label} 年。"
         ),
     ]
 
@@ -291,6 +380,43 @@ def generate_calendar(years: list[dict[str, Any]]) -> bytes:
                         f"共{holiday_days}天。"
                     )
 
+                if holiday_days == 1:
+                    same_day_reminder = f"今天是{holiday['name']}"
+                elif day_number == 1:
+                    same_day_reminder = f"{holiday['name']}放假第一天"
+                elif day_number == holiday_days:
+                    same_day_reminder = f"{holiday['name']}放假最后一天"
+                else:
+                    same_day_reminder = f"{holiday['name']}放假第{day_number}天"
+
+                reminders = [
+                    (SAME_DAY_REMINDER_TRIGGER, same_day_reminder),
+                ]
+                if holiday_days == 1:
+                    reminders.insert(
+                        0,
+                        (
+                            PREVIOUS_DAY_REMINDER_TRIGGER,
+                            f"明天是{holiday['name']}",
+                        ),
+                    )
+                elif day_index == 0:
+                    reminders.insert(
+                        0,
+                        (
+                            PREVIOUS_DAY_REMINDER_TRIGGER,
+                            f"明天是{holiday['name']}放假第一天",
+                        ),
+                    )
+                elif day_number == holiday_days:
+                    reminders.insert(
+                        0,
+                        (
+                            PREVIOUS_DAY_REMINDER_TRIGGER,
+                            f"明天是{holiday['name']}放假最后一天",
+                        ),
+                    )
+
                 description = (
                     f"{day_description}\n"
                     f"{holiday['schedule']}\n"
@@ -314,6 +440,7 @@ def generate_calendar(years: list[dict[str, Any]]) -> bytes:
                             source_url=year["source_url"],
                             timestamp=year["last_modified"],
                             sequence=year["revision"],
+                            reminders=reminders,
                         ),
                     )
                 )
@@ -341,9 +468,87 @@ def generate_calendar(years: list[dict[str, Any]]) -> bytes:
                             source_url=year["source_url"],
                             timestamp=year["last_modified"],
                             sequence=year["revision"],
+                            reminders=(
+                                (
+                                    PREVIOUS_DAY_REMINDER_TRIGGER,
+                                    f"明天是{holiday['name']}补班",
+                                ),
+                                (
+                                    SAME_DAY_REMINDER_TRIGGER,
+                                    f"{holiday['name']}补班",
+                                ),
+                            ),
                         ),
                     )
                 )
+
+        for observance in year["observances"]:
+            observance_description = (
+                f"{observance['basis']}\n"
+                "该日为纪念日，不属于法定放假安排。"
+            )
+            if observance["source_url"] is not None:
+                observance_description += f"\n来源：{observance['source_url']}"
+
+            observance_date = observance["date"]
+            events.append(
+                (
+                    observance_date,
+                    2,
+                    event_lines(
+                        uid=(
+                            f"observance-{observance_date.strftime('%Y%m%d')}-"
+                            f"{observance['id']}@cncalendar"
+                        ),
+                        start=observance_date,
+                        end=observance_date,
+                        summary=observance["name"],
+                        description=observance_description,
+                        categories=("纪念日",),
+                        source_url=observance["source_url"],
+                        timestamp=year["last_modified"],
+                        sequence=year["revision"],
+                        reminders=(
+                            (
+                                SAME_DAY_REMINDER_TRIGGER,
+                                f"今天是{observance['name']}",
+                            ),
+                        ),
+                    ),
+                )
+            )
+
+        calendar_update_date = date(
+            year["year"],
+            *CALENDAR_UPDATE_EVENT_MONTH_DAY,
+        )
+        events.append(
+            (
+                calendar_update_date,
+                3,
+                event_lines(
+                    uid=(
+                        "maintenance-"
+                        f"{calendar_update_date.strftime('%Y%m%d')}-"
+                        "calendar-update@cncalendar"
+                    ),
+                    start=calendar_update_date,
+                    end=calendar_update_date,
+                    summary=CALENDAR_UPDATE_EVENT_TEXT,
+                    description=CALENDAR_UPDATE_EVENT_TEXT,
+                    categories=("日历维护",),
+                    source_url=None,
+                    timestamp=year["last_modified"],
+                    sequence=year["revision"],
+                    reminders=(
+                        (
+                            SAME_DAY_REMINDER_TRIGGER,
+                            CALENDAR_UPDATE_EVENT_TEXT,
+                        ),
+                    ),
+                ),
+            )
+        )
 
     for _, _, lines in sorted(events, key=lambda event: (event[0], event[1])):
         logical_lines.extend(lines)
@@ -374,6 +579,8 @@ def validate_ics_bytes(calendar: bytes) -> None:
             )
     if calendar.count(b"BEGIN:VEVENT\r\n") != calendar.count(b"END:VEVENT\r\n"):
         raise CalendarDataError("VEVENT 开始与结束数量不一致")
+    if calendar.count(b"BEGIN:VALARM\r\n") != calendar.count(b"END:VALARM\r\n"):
+        raise CalendarDataError("VALARM 开始与结束数量不一致")
 
 
 def parse_args() -> argparse.Namespace:
@@ -403,6 +610,7 @@ def main() -> int:
     try:
         years = load_years(args.data_dir)
         generated = generate_calendar(years)
+        maintenance_warning = annual_update_warning(years)
         if args.check:
             if not args.output.exists():
                 print(f"错误：输出文件不存在：{args.output}", file=sys.stderr)
@@ -414,6 +622,9 @@ def main() -> int:
                     file=sys.stderr,
                 )
                 return 1
+            if maintenance_warning is not None:
+                print(f"年度更新提醒：{maintenance_warning}", file=sys.stderr)
+                return 1
             print(
                 f"校验通过：{len(years)} 个年度，"
                 f"{generated.count(b'BEGIN:VEVENT')} 个日程"
@@ -422,6 +633,8 @@ def main() -> int:
 
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_bytes(generated)
+        if maintenance_warning is not None:
+            print(f"年度更新提醒：{maintenance_warning}", file=sys.stderr)
         print(
             f"已生成 {args.output}：{len(years)} 个年度，"
             f"{generated.count(b'BEGIN:VEVENT')} 个日程"

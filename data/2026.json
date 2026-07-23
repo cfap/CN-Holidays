@@ -1,7 +1,7 @@
 {
   "year": 2026,
-  "revision": 0,
-  "last_modified": "2025-11-04T09:00:00Z",
+  "revision": 6,
+  "last_modified": "2026-07-23T05:46:20Z",
   "document_title": "国务院办公厅关于2026年部分节假日安排的通知",
   "document_number": "国办发明电〔2025〕7号",
   "source_url": "https://www.gov.cn/zhengce/zhengceku/202511/content_7047091.htm",
@@ -71,6 +71,33 @@
         "2026-10-10"
       ],
       "schedule": "10月1日至7日放假调休，共7天；9月20日、10月10日上班。"
+    }
+  ],
+  "observances": [
+    {
+      "id": "valentines-day",
+      "name": "情人节",
+      "date": "2026-02-14",
+      "basis": "每年2月14日"
+    },
+    {
+      "id": "mothers-day",
+      "name": "母亲节",
+      "date": "2026-05-10",
+      "basis": "5月第二个星期日"
+    },
+    {
+      "id": "fathers-day",
+      "name": "父亲节",
+      "date": "2026-06-21",
+      "basis": "6月第三个星期日"
+    },
+    {
+      "id": "qixi-festival",
+      "name": "七夕节",
+      "date": "2026-08-19",
+      "basis": "农历七月初七；2026年对应公历8月19日",
+      "source_url": "https://www.hko.gov.hk/tc/gts/time/calendar/pdf/files/2026.pdf"
     }
   ]
 }
